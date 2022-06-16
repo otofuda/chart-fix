@@ -23,8 +23,12 @@ interface NoteData {
 
 type NoteOptionData = number | string;
 
+// Type絞り込みの設定
 const types = [1, 2, 3, 4, 5, 94, 95, 96, 97, 98, 99, 100];
 const selectedTypes = ref<number[]>([...types]);
+
+// 型チェックの設定
+const checkOptionString = ref(true);
 
 const messages = ref<string[]>([]);
 let chartObject: ChartData | null = null;
@@ -64,12 +68,12 @@ const onConvert = () => {
     hard: [],
     extra: []
   };
-
-  // 特定ノーツの削除
   ["raku", "easy", "normal", "hard", "extra"].forEach((difficulty) => {
     const noteArray = chartObject && chartObject[difficulty];
     if (noteArray === null) return;
 
+
+    // 特定ノーツの削除
     const before = noteArray.length;
     let after = noteArray.length;
     newObject[difficulty] = noteArray.filter((note) => {
@@ -82,7 +86,26 @@ const onConvert = () => {
     });
 
     messages.value.push(`Filterを実行: [${difficulty}] ${before} => ${after} Objects`);
+
+    // 型チェックを実行
+    newObject[difficulty] = newObject[difficulty].map((note, i) => {
+      const newNote = note;
+
+      // note.option : string[]
+      if (checkOptionString.value) {
+        newNote.option = note.option.map((opt, j) => {
+          if (typeof opt !== "string") {
+            messages.value.push(`不正な型のOptionを発見: [${difficulty}] index: ${i}, option[${j}]`);
+            return String(opt);
+          }
+          return opt;
+        });
+      }
+
+      return newNote;
+    });
   });
+
 
   console.log(newObject);
 
@@ -118,6 +141,17 @@ const onConvert = () => {
             :label="`Type: ${type}`"
             :value="type"
             v-for="type in types"
+          />
+        </v-row>
+
+        <p class="mb-4">Type check</p>
+
+        <v-row class="mb-4">
+          <v-checkbox
+            v-model="checkOptionString"
+            dense
+            hide-details
+            label="note.option : string[]"
           />
         </v-row>
 
