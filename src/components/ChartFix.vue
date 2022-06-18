@@ -87,19 +87,30 @@ const onConvert = () => {
 
     messages.value.push(`Filterを実行: [${difficulty}] ${before} => ${after} Objects`);
 
+    // option を string[] に強制
+    const fixOptionToString = (note: NoteData): NoteData => {
+      const newNote: NoteData = note;
+      newNote.option = note.option.map((opt, j) => {
+        if (typeof opt !== "string") {
+          messages.value.push(
+            `不正な型のOptionを発見: [${difficulty}] m: ${note.measure} (${note.position}/${note.split}), option[${j}]`
+          );
+          return String(opt);
+        }
+        return opt;
+      });
+      // end配列を再帰的にチェック
+      newNote.end = newNote.end.map((end) => fixOptionToString(end));
+      return newNote;
+    }
+
     // 型チェックを実行
-    newObject[difficulty] = newObject[difficulty].map((note, i) => {
-      const newNote = note;
+    newObject[difficulty] = newObject[difficulty].map((note) => {
+      let newNote = note;
 
       // note.option : string[]
       if (checkOptionString.value) {
-        newNote.option = note.option.map((opt, j) => {
-          if (typeof opt !== "string") {
-            messages.value.push(`不正な型のOptionを発見: [${difficulty}] index: ${i}, option[${j}]`);
-            return String(opt);
-          }
-          return opt;
-        });
+        newNote = fixOptionToString(newNote);
       }
 
       return newNote;
