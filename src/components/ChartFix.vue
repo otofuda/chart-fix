@@ -1,15 +1,19 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 
-// interface ChartData {
-//   raku: NoteData[];
-//   easy: NoteData[];
-//   normal: NoteData[];
-//   hard: NoteData[];
-//   extra: NoteData[];
-// }
+type Difficulties = "raku" | "easy" | "normal" | "hard" | "extra";
 
-type ChartData = Record<string, NoteData[]>;
+type ChartData = {
+  [d in Difficulties]: NoteData[];
+} & {
+  info: ChartInfo;
+};
+
+interface ChartInfo {
+  bpm: number;
+  beat: number;
+  offset: number;
+}
 
 interface NoteData {
   type: number;
@@ -66,12 +70,14 @@ const onConvert = () => {
     easy: [],
     normal: [],
     hard: [],
-    extra: []
+    extra: [],
+    info: { ...chartObject.info }
   };
-  ["raku", "easy", "normal", "hard", "extra"].forEach((difficulty) => {
+
+  const dificulties: Difficulties[] =  ["raku", "easy", "normal", "hard", "extra"];
+  dificulties.forEach((difficulty) => {
     const noteArray = chartObject && chartObject[difficulty];
     if (noteArray === null) return;
-
 
     // 特定ノーツの削除
     const before = noteArray.length;
